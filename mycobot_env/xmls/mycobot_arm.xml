@@ -1,0 +1,165 @@
+<!--
+  myCobot 280 PI + параллельный схват, для MuJoCo/MJX.
+
+  Всё, что касается геометрии и кинематики, перенесено из
+  моделей Elephant Robotics:
+
+    Рука      https://github.com/elephantrobotics/mycobot_ros
+              mycobot_description/urdf/mycobot_280_pi/mycobot_280_pi.urdf
+              — смещения звеньев, пределы суставов, меши.
+
+    Схват     mycobot_description/urdf/parallel_gripper/
+              mycobot_parallel_gripper.urdf
+              — две призматические губки, ход 7 мм каждая, меши.
+
+    Крепление mycobot_description/urdf/mycobot_280_jn/
+              mycobot_280_jn_parallel_gripper.urdf, сустав
+              joint6output_to_gripper_base: xyz="0 0 0.034" rpy="1.579 0 0".
+              (Комбинированный файл есть только под Jetson, поэтому рука
+              берётся из Pi-файла, а крепление — отсюда.)
+
+    Инерции   исходно из mycobot_mujoco (вариант под Jetson Nano) — звенья
+              у Pi и JN одинаковые, отличается только высота основания.
+
+  ЧЕГО В URDF НЕТ и дописано здесь: приводы, имена геометрий (на них
+  ссылаются сенсоры контакта), контрольная точка схвата, зеркальность
+  губок (в URDF она задана связью mimic, которую импорт MuJoCo не
+  переносит), отключение столкновений схвата с собственной рукой.
+-->
+
+<mujoco model="mycobot_280pi arm">
+  <compiler angle="radian" meshdir="meshes/" autolimits="true"/>
+
+  <asset>
+    <mesh name="pi_base" file="pi_G_base.stl"/>
+    <mesh name="joint1_jet" file="pi_joint1_pi.stl"/>
+    <mesh name="joint2" file="pi_joint2.stl"/>
+    <mesh name="joint3" file="pi_joint3.stl"/>
+    <mesh name="joint4" file="pi_joint4.stl"/>
+    <mesh name="joint5" file="pi_joint5.stl"/>
+    <mesh name="joint6" file="pi_joint6.stl"/>
+    <mesh name="joint7" file="pi_joint7.stl"/>
+    <mesh name="pg_base" file="pg_gripper_base.stl"/>
+    <mesh name="pg_left" file="pg_gripper_left.stl"/>
+    <mesh name="pg_right" file="pg_gripper_right.stl"/>
+  </asset>
+
+  <default>
+    <default class="mycobot">
+      <joint damping="1.5" armature="0.05" frictionloss="0.05"/>
+      <position kp="35" forcerange="-6 6"/>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="finger">
+        <joint type="slide" damping="2.0" armature="0.005" frictionloss="0.002"
+               range="0 0.007" solimplimit="0.99 0.9999 0.0001" solreflimit="0.01 1"/>
+        <geom friction="1.2 0.02 0.002" solimp="0.99 0.999 0.0005" solref="0.012 1" condim="3" group="3" rgba="0.15 0.15 0.15 1"/>
+      </default>
+    </default>
+  </default>
+
+  <worldbody>
+    <geom class="visual" mesh="joint1_jet" quat="0.000796327 0 0 1"/>
+    <!-- Cтолкновения по box. -->
+    <geom name="base_col" type="box" size="0.05 0.05 0.07" pos="0 0 0.07"
+          contype="1" conaffinity="0" group="3"/>
+
+    <body name="joint2" pos="0 0 0.13956" childclass="mycobot">
+      <inertial pos="-4.46252e-07 -0.0048982 -0.0203936" quat="0.988685 0.150004 1.75753e-05 -6.19332e-05" mass="0.153266" diaginertia="0.00010997 0.000104609 4.89092e-05"/>
+      <joint name="joint2_to_joint1" pos="0 0 0" axis="0 0 1" range="-2.9321 2.9321"/>
+      <geom class="visual" pos="0 0 -0.06096" quat="0.707105 0 0 -0.707108" mesh="joint2"/>
+
+      <body name="joint3" pos="0 0 -0.001" quat="0.499998 0.500002 0.5 -0.5">
+        <inertial pos="-0.0548658 -3.79418e-06 0.0581352" quat="0.50338 0.49662 0.497294 0.502669" mass="0.4" diaginertia="0.000569683 0.000554829 8.82752e-05"/>
+        <joint name="joint3_to_joint2" pos="0 0 0" axis="0 0 1" range="-2.4434 2.4434"/>
+        <geom class="visual" pos="0 0 0.03256" quat="0.707105 0 -0.707108 0" mesh="joint3"/>
+
+        <body name="joint4" pos="-0.1104 0 0">
+          <inertial pos="-0.0454441 4.51021e-07 0.00478273" quat="0.508392 0.491471 0.491339 0.508508" mass="0.219069" diaginertia="0.000359328 0.000340078 6.35956e-05"/>
+          <joint name="joint4_to_joint3" pos="0 0 0" axis="0 0 1" range="-2.6179 2.6179"/>
+          <geom class="visual" pos="0 0 0.03056" quat="0.707105 0 -0.707108 0" mesh="joint4"/>
+
+          <body name="joint5" pos="-0.096 0 0.06462" quat="0.707105 0 0 -0.707108">
+            <inertial pos="1.49997e-05 -0.00761485 -0.00688111" quat="0.903244 0.429125 -0.00118023 0.00112811" mass="0.0576212" diaginertia="1.88765e-05 1.81573e-05 1.0565e-05"/>
+            <joint name="joint5_to_joint4" pos="0 0 0" axis="0 0 1" range="-2.6179 2.6179"/>
+            <geom class="visual" pos="0 -0.001 -0.0345" quat="0.499998 0.500002 -0.5 0.5" mesh="joint5"/>
+
+            <body name="joint6" pos="0 -0.07318 -0.001" quat="0.499998 0.5 -0.5 0.500002">
+              <inertial pos="-3.34552e-08 0.00487808 -0.00751659" quat="0.395895 0.918296 6.92557e-06 2.44425e-06" mass="0.0904837" diaginertia="4.06947e-05 3.23387e-05 2.57661e-05"/>
+              <joint name="joint6_to_joint5" pos="0 0 0" axis="0 0 1" range="-2.7052 2.7925"/>
+              <geom class="visual" pos="0 0 -0.038" mesh="joint6"/>
+
+              <body name="joint6_flange" pos="0 0.0456 0" quat="0.707105 -0.707108 0 0">
+                <inertial pos="-6.68861e-07 -1.54403e-07 -0.00514555" quat="0.276336 0.650875 -0.27633 0.650877" mass="0.0121397" diaginertia="1.94827e-06 1.13494e-06 1.13491e-06"/>
+                <joint name="joint7_to_joint6" pos="0 0 0" axis="0 0 1" range="-3.14 3.14159"/>
+                <geom class="visual" pos="0 0 -0.012" mesh="joint7"/>
+
+                <body name="gripper_base" pos="0 0 -0.043">
+                  <!-- Масса и инерция пересчитаны из самих мешей 
+                       (меш замкнут, trimesh даёт watertight=True, плотность
+                       ABS-пластика 1050 кг/м3), другими составляющими принебрег -->
+                  <inertial pos="0 -0.001231 0.003697" mass="0.079763" diaginertia="4.358e-05 3.282e-05 2.321e-05"/>
+                  <!-- Столкновения корпуса схвата считаются по box, а не по
+                       мешу т.к. в MJX меш в наборе столкновений включает
+                       дорогой алгоритм выпуклых оболочек и роняет скорость
+                       обучения, значения также через trimesh -->
+                  <geom name="hand_capsule" type="box" size="0.033 0.023 0.026"
+                        pos="0 0.0095 0.0035" contype="1" conaffinity="0" group="3"
+                        rgba="0.5 0.5 0.55 1"/>
+                  <geom name="hand_capsule_visual" type="mesh" mesh="pg_base" quat="0 1 0 0"
+                        contype="0" conaffinity="0" group="2" rgba="0.45 0.45 0.5 1"/>
+
+                  <site name="gripper" pos="0 -0.00167 -0.0425" size="0.004" rgba="1 0 0 1"/>
+
+                  <body name="left_finger" pos="0 0 0">
+                    <inertial pos="0.014997 -0.000725 -0.026348" mass="0.005546"
+                              quat="0.081561 0.112606 0.056786 0.988657"
+                              diaginertia="1.571e-06 1.482e-06 2.219e-07"/>
+                    <joint name="left_finger_joint" axis="-1 0 0" class="finger"/>
+                    <geom name="left_finger_pad" type="box" size="0.0015 0.0105 0.010"
+                          pos="0.009 -0.003 -0.0385" class="finger"/>
+                    <geom name="left_finger_visual" type="mesh" mesh="pg_left" quat="0 1 0 0"
+                          contype="0" conaffinity="0" group="2" rgba="0.15 0.15 0.15 1"/>
+                  </body>
+                  <body name="right_finger" pos="0 0 0">
+                    <inertial pos="-0.014997 -0.000725 -0.026348" mass="0.005546"
+                              quat="0.056786 0.988657 0.081560 0.112606"
+                              diaginertia="1.571e-06 1.482e-06 2.219e-07"/>
+                    <joint name="right_finger_joint" axis="1 0 0" class="finger"/>
+                    <geom name="right_finger_pad" type="box" size="0.0015 0.0105 0.010"
+                          pos="-0.009 -0.003 -0.0385" class="finger"/>
+                    <geom name="right_finger_visual" type="mesh" mesh="pg_right" quat="0 1 0 0"
+                          contype="0" conaffinity="0" group="2" rgba="0.15 0.15 0.15 1"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <equality>
+    <joint joint1="right_finger_joint" joint2="left_finger_joint" polycoef="0 1 0 0 0"
+           solimp="0.99 0.9999 0.0001" solref="0.01 1"/>
+  </equality>
+
+  <tendon>
+    <fixed name="gripper_span">
+      <joint joint="left_finger_joint" coef="0.5"/>
+      <joint joint="right_finger_joint" coef="0.5"/>
+    </fixed>
+  </tendon>
+
+  <actuator>
+    <position name="actuator1" joint="joint2_to_joint1" ctrlrange="-2.9321 2.9321" kp="45"/>
+    <position name="actuator2" joint="joint3_to_joint2" ctrlrange="-2.4434 2.4434" kp="45"/>
+    <position name="actuator3" joint="joint4_to_joint3" ctrlrange="-2.6179 2.6179" kp="35"/>
+    <position name="actuator4" joint="joint5_to_joint4" ctrlrange="-2.6179 2.6179" kp="20"/>
+    <position name="actuator5" joint="joint6_to_joint5" ctrlrange="-2.7052 2.7925" kp="35"/>
+    <position name="actuator6" joint="joint7_to_joint6" ctrlrange="-3.14 3.14159" kp="20"/>
+    <position name="gripper_actuator" tendon="gripper_span" ctrlrange="0 0.0045" kp="400" forcerange="-3 3"/>
+  </actuator>
+</mujoco>

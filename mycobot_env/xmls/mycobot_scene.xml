@@ -1,0 +1,42 @@
+<mujoco model="mycobot_280pi scene">
+  <!-- Числа уменьшены пропорционально размеру робота (0.4)
+       0.075→0.03, 0.025→0.01, 0.05→0.02, 0.01→0.005, 0.2→0.08 
+      https://github.com/google-deepmind/mujoco_playground/blob/main/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_scene.xml     
+  -->
+  <include file="mycobot_arm.xml"/>
+
+  <statistic center="0.1 0 0.15" extent="0.4"/>
+
+  <!-- noslip_iterations 0 -> 3. Отдельный проход решателя, убирающий
+       ОСТАТОЧНОЕ ПРОСКАЛЬЗЫВАНИЕ в контактах. По умолчанию выключен, и из-за
+       этого кубик равномерно выползал из неподвижно удерживающего схвата
+  -->
+  <option timestep="0.005" iterations="5" ls_iterations="8" noslip_iterations="3" integrator="implicitfast">
+    <flag eulerdamp="disable"/>
+  </option>
+
+  <custom>
+    <numeric data="12" name="max_contact_points"/>
+  </custom>
+
+  <visual>
+    <headlight diffuse=".8 .8 .8" ambient=".3 .3 .3" specular="1 1 1"/>
+    <rgba force="1 0 0 1"/>
+    <global azimuth="120" elevation="-25"/>
+    <map force="0.01"/>
+    <quality shadowsize="8192"/>
+    <scale contactwidth="0.03" contactheight="0.01" forcewidth="0.02" com="0.02" framewidth="0.005" framelength="0.08"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="1 1 1" rgb2="1 1 1" width="800" height="800"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="1 1 1" rgb2="1 1 1" markrgb="0 0 0"
+      width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane" contype="1"/>
+  </worldbody>
+</mujoco>

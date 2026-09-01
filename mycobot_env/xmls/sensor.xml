@@ -1,0 +1,10 @@
+<!-- https://github.com/google-deepmind/mujoco_playground/blob/main/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/sensor.xml -->
+<mujoco>
+  <sensor>
+    <contact name="left_finger_pad_floor_found" geom1="left_finger_pad" geom2="floor" reduce="mindist" num="1" data="found"/>
+    <contact name="right_finger_pad_floor_found" geom1="right_finger_pad" geom2="floor" reduce="mindist" num="1" data="found"/>
+    <contact name="hand_capsule_floor_found" geom1="hand_capsule" geom2="floor" reduce="mindist" num="1" data="found"/>
+    <contact name="left_finger_box_found" geom1="left_finger_pad" geom2="box" reduce="mindist" num="1" data="found"/>
+    <contact name="right_finger_box_found" geom1="right_finger_pad" geom2="box" reduce="mindist" num="1" data="found"/>
+  </sensor>
+</mujoco>
